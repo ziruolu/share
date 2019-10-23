@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>防抖</title>
+    <style>
+        #container{
+            width: 100%;
+            height: 200px;
+            line-height: 200px;
+            text-align: center;
+            color: #fff;
+            background: #444;
+            font-size: 30px
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<button id="button">取消debounce</button>
+<script>
+    // 前端碰到一些被频繁触发的事件：scroll，mousedown，mousemove
+
+    var container = document.getElementById('container')
+    var count = 1
+    var button = document.getElementById('button')
+
+
+    // container.onmousemove = function(e){
+    //     container.innerHTML = count++;
+    // }
+
+    //防抖的原理：你触发一个事件，它会在n秒之后执行，如果在n秒内又重新触发，那么会以新的事件的时间为准，再过n秒之后执行。总之就是触发事件n秒之后才执行。
+
+    function debounce(func, wait){
+        var timer;
+        return function(){
+            clearTimeout(timer);
+            timer = setTimeout(func, wait)
+        }
+    }
+
+
+    // 1. this的问题
+    function debounce(func, wait){
+        var timer;
+        return function(){
+            var context = this;
+            clearTimeout(timer);
+            timer = setTimeout(function(){
+                func.apply(context)
+            }, wait)
+        }
+    }
+
+    // 2. event对象的问题
+    function debounce(func, wait){
+        var timer;
+        return function(){
+            var context = this;
+            var args = arguments;
+            clearTimeout(timer);
+            timer = setTimeout(function(){
+                func.apply(context, args)
+            }, wait)
+        }
+    }
+
+    // 3. 立即执行: 我不希望等到事件停止触发后才执行，希望立即执行； 然后等到停止触发n秒之后，重新触发执行.
+    // 加一个参数 immediate 来判断是都立即执行
+    function debounce(func, wait, immediate){
+        var timer;
+
+        return function(){
+            var context = this;
+            var args = arguments;
+            if(timer) clearTimeout(timer);
+            if(immediate){
+                // console.log('timer:',timer);  // 打印： 1,2,3，4、。。。。。这个数字代表啥意思，用来确定是哪一次的setTimeout，用来做清除时传递的参数，指定当前要清除的定时器
+                var callNow = !timer;
+                timer = setTimeout(function(){
+                    timer = null
+                }, wait);
+                if(callNow)
+                    func.apply(context, args)
+
+            }
+            else{
+                timer = setTimeout(function(){
+                    func.apply(context, args)
+                }, wait)
+            }
+        }
+    }
+
+
+    // this的问题，clearTimeout清除定时器的问题
+
+    // 4. 取消：希望能取消debounce，比如我们的debounce的时间间隔是10甚至更长的时候，immediate为true，我们只有等10s后才能重新触发,希望有一个操作能取消这个防抖，可以立刻执行
+    function debounce(func, wait, immediate){
+        var timer;
+        var debounce = function(){
+            var context = this;
+            var args = arguments;
+            if(timer) clearTimeout(timer);
+            if(immediate){
+                var callNow = !timer;
+                timer = setTimeout(function(){
+                    timer = null
+                }, wait);
+                if(callNow)
+                    func.apply(context, args)
+            }
+            else{
+                timer = setTimeout(function(){
+                    func.apply(context, args)
+                }, wait)
+            }
+        };
+        debounce.cancel = function(){
+            clearTimeout(timer)
+            timer = null
+        };
+        return debounce
+    }
+
+
+    // var setAction = debounce4(function(){
+    //     container.innerHTML = count++;
+    // }, 10000, true)
+    //
+    // container.onmousemove = setAction
+    //
+    // button.addEventListener('click',function(){
+    //     setAction.cancel()
+    // })
+
+
+    // 5. 返回值
+    function debounce(func, wait, immediate){
+        var timer, result
+
+        var debounce = function(){
+            var context = this
+            var args = arguments
+
+            // 清除定时器，传递一个参数，用来表示清除的是哪一个定时器
+            if(timer) clearTimeout(timer)
+            if(immediate){
+
+                // console.log('timer:',timer);  // 打印： 1,2,3，4、。。。。。这个数字代表啥意思，用来确定是哪一次的setTimeout，用来做清除时传递的参数，指定当前要清除的定时器
+                // 停止触发n秒之后，再重新触发，立即执行. 在停止触发
+                var callNow = !timer
+                timer = setTimeout(function(){
+                    timer = null
+                }, wait)
+                if(callNow)
+                    result = func.apply(context, args)
+            }
+            else{
+                result = new Promise(function(resolve){
+                    timer = setTimeout(function(){
+                        resolve(func.apply(context, args))
+                    }, wait)
+                })
+            }
+            return result
+        }
+
+        debounce.cancel = function(){
+            clearTimeout(timer)
+            timer = null
+        }
+        return debounce
+    }
+
+    function getUserAction() {
+        container.innerHTML = count++;
+        // 函数有返回值
+        // return '111';
+    }
+
+    // container.onmousemove = function(){
+    //     var result = debounce5(getUserAction, 1000, true)
+    //     result.then(v=>{
+    //         console.log(v);
+    //     })
+    //     console.log(result);
+    // }
+
+
+    container.onmousemove = debounce(getUserAction, 1000)
+
+
+
+
+</script>
+</body>
+</html>
