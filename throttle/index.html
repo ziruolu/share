@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>节流</title>
+    <style>
+        #container{
+            width: 100%;
+            height: 200px;
+            line-height: 200px;
+            text-align: center;
+            color: #fff;
+            background: #444;
+            font-size: 30px
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<button id="button">取消throttle</button>
+<script>
+    var container = document.getElementById('container');
+    var count = 1;
+    var getUserAction = function () {
+        container.innerHTML = count++
+    };
+    // 节流：持续触发事件，隔一段时间，执行一次
+    // 实现方式： 1. 时间戳 2. 定时器
+    // 1. 时间戳:  当触发事件时，记录当前时间，减去之前的时间（最开始设为0），如果大于设置的时间周期，就执行函数，然后更新时间为当前的时间戳，如果小于，就不执行。
+    function throttle(func, wait){
+        var previous = 0;
+        var context, args;
+
+        return function(){
+            context = this;
+            args = arguments;
+            var now = + new Date();
+            if(now - previous > wait){  // 在1000内去触发事件，不会被执行，只有超过之前时间1000ms才会执行
+                func.apply(context, args);
+                previous = now
+            }
+        }
+    }
+
+    // 2. 使用定时器：我们设置一个定时器，再触发事件的时候，如果定时器存在，就不执行；如果为空，就执行。
+    function throttle(func, wait){
+        var timer, context, args;
+
+
+        return function(){
+            context = this;
+            args = arguments;
+            if(!timer){
+                // 返回的值是number类型，标识的是哪一个定时器。清除的时候这个值作为参数传递，表示我清除的是哪一个定时器。
+                timer = setTimeout(function () {
+                    timer = null  // 等于null是清除定时器吗？ 与clearTimeOut有什么区别？ // 值为null只是清空了timer的内存占用，定时器还是存在的，
+                    func.apply(context, args)
+                }, wait)
+            }
+        }
+    }
+    /*
+    *比较两个版本：
+    * 1. 第一种会立刻执行，第二种会在n秒之后执行
+    * 2. 第一种事件停止触发后不会再执行事件，第二种事件停止触发后依然会执行一次事件
+    * */
+
+
+    // 3. 合并：我们想要一个有头有尾的，就是鼠标移入能立刻执行，停止触发还能再执行一次
+    function throttle(func, wait){
+        var timer, context,args;
+        var previous = 0;
+
+        var throttle = function(){
+
+            var now = +new Date()
+
+            var remain = wait - (now-previous);
+
+            // 出现大于wait就是改了系统时间的情况下
+            if(remain < 0 || remain > wait){
+                if(timer){
+                    clearTimeout(timer)
+                    timer = null
+                }
+
+                previous = now;
+                func.apply(context, args)
+            }else if(!timer){
+                timer = setTimeout(function(){
+                    previous = +new Date()  //这里不能再写now了，因为这是经过一段时间之后执行的
+                    timer = null
+                    func.apply(context,args)
+                }, remain)
+            }
+
+        };
+        return throttle
+
+    }
+
+
+    // 4. 优化：有头没尾，或者有尾没头，借助 options 参数，包含两个元素：leading: 是否禁用第一次执行，trailing：禁用停止触发的回调
+    function throttle(func, wait, options){
+        var timer, context, args, result;
+        var previous = 0;
+        if(!options) options = {};
+
+        var throttle = function(){
+            var now = +new Date();
+
+            // 首次不执行，所以你也要先判断previous
+
+            if(!previous && options.leading === false) previous = now;
+
+            var remain = wait - (now-previous);
+            if(remain < 0 || remain > wait){
+                if(timer){
+                    clearTimeout(timer);
+                    timer = null
+                }
+
+                result = func.apply(context, args);
+                previous = now;
+
+                if(!timer) context = args = null
+
+            }else if(!timer && options.trailing !== false){
+                timer = setTimeout(function(){
+
+                    // 如果禁止第一次执行，那么previous重置为0，下一次触发的时候，判断previous为0且leading为false，那么都不会立即执行
+                    previous = options.leading === false ? 0 : +new Date();
+
+                    result = func.apply(context, args);
+                    timer = null;
+
+                    if(!timer) context = args = null // 1. 有必要判断吗？
+                }, remain)  // 3. 什么这里是remain，不是wait？
+            }
+
+            return result;  // 2. 返回值，在第二种异步的情况下，返回值一直是undefined，是否可以用Promise？
+        };
+
+        return throttle
+    }
+
+    container.onmousemove=throttle(getUserAction, 3000)
+
+
+</script>
+</body>
+</html>
