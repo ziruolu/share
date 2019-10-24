@@ -191,8 +191,60 @@
 
     container.onmousemove = debounce(getUserAction, 1000)
 
-
-
+    // debounce 源码
+    // _.debounce = function(func, wait, immediate) {
+    //     var timeout, args, context, timestamp, result;
+    //
+    //     var later = function() {// 定时器回调函数
+    //         // 定时器回调函数与触发事件的时间差
+    //         // 用于判断是否需要执行目标函数
+    //         var last = _.now() - timestamp;
+    //
+    //         // 当时间差小于设定的等待时间，重新设置定时器
+    //         if (last < wait && last >= 0) {
+    //             timeout = setTimeout(later, wait - last);
+    //         } else {// 时间差大于等待时间
+    //             // 释放引用
+    //             timeout = null;
+    //             // 这里需要判断是否为立即执行模式
+    //             // 如果为立即执行模式，则不再进行目标函数的执行了
+    //             if (!immediate) {
+    //                 // 非立即执行模式，执行目标函数
+    //                 result = func.apply(context, args);
+    //                 if (!timeout) context = args = null;
+    //             }
+    //         }
+    //     };
+    //
+    //     // 返回一个闭包函数
+    //     return function() {
+    //         // 指定上下文
+    //         context = this;
+    //
+    //         // 获取传入参数
+    //         args = arguments;
+    //
+    //         // 当前事件触发的时间戳，每次触发事件都会更新时间戳
+    //         timestamp = _.now();
+    //
+    //         // 用于判断是否立即执行目标函数
+    //         // 判断immediate的boolean值是否为true,设定立即执行模式
+    //         // 还要同时满足当前没有设置定时器，也就是判断是否为首次执行
+    //         // 当满足执行模式为立即执行且首次触发事件时，则立即执行目标函数
+    //         var callNow = immediate && !timeout;
+    //
+    //         // 设置定时器
+    //         if (!timeout) timeout = setTimeout(later, wait);
+    //         if (callNow) { // 判断是否立即执行目标函数
+    //             // 立即执行目标函数,缓存目标函数返回值
+    //             result = func.apply(context, args);
+    //             // 释放引用资源
+    //             context = args = null;
+    //         }
+    //         // 返回目标函数返回值
+    //         return result;
+    //     };
+    // };
 
 </script>
 </body>
