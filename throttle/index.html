@@ -93,14 +93,13 @@
                     func.apply(context,args)
                 }, remain)
             }
-
         };
         return throttle
 
     }
 
 
-    // 4. 优化：有头没尾，或者有尾没头，借助 options 参数，包含两个元素：leading: 是否禁用第一次执行，trailing：禁用停止触发的回调
+    // 4. 优化：有头没尾，或者有尾没头，借助 options 参数，包含两个元素：leading: 是否禁用第一次执行，trailing: 禁用停止触发的回调
     function throttle(func, wait, options){
         var timer, context, args, result;
         var previous = 0;
@@ -141,11 +140,11 @@
             return result;  // 2. 返回值，在第二种异步的情况下，返回值一直是undefined，是否可以用Promise？
         };
 
+        // 设置的定时器不用清除吗？
         return throttle
     }
 
-    container.onmousemove=throttle(getUserAction, 3000)
-
+    container.onmousemove=throttle(getUserAction, 1000)
 
 </script>
 </body>
